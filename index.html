@@ -41,6 +41,94 @@
     <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@900&amp;display=swap" rel="stylesheet" />
   </head>
   <body>
+    <script>
+      <script>
+(() => {
+  const OriginalWebSocket = window.WebSocket;
+
+  const PROXY = "wss://ws-proxy.iammrbeastbackup.workers.dev";
+
+  function encodeTarget(url) {
+    return btoa(url);
+  }
+
+  function buildProxyURL(target) {
+    return PROXY + "?target=" + encodeURIComponent(target);
+  }
+
+  class StealthWebSocket {
+    constructor(url, protocols) {
+      this._target = url;
+      this._proxyUrl = buildProxyURL(url);
+
+      // Create real socket (through proxy)
+      this._ws = protocols
+        ? new OriginalWebSocket(this._proxyUrl, protocols)
+        : new OriginalWebSocket(this._proxyUrl);
+
+      // Mirror properties
+      this.binaryType = "blob";
+
+      // Forward events
+      this._ws.onopen = (e) => this.onopen && this.onopen(e);
+      this._ws.onmessage = (e) => this.onmessage && this.onmessage(e);
+      this._ws.onclose = (e) => this.onclose && this.onclose(e);
+      this._ws.onerror = (e) => this.onerror && this.onerror(e);
+    }
+
+    send(data) {
+      this._ws.send(data);
+    }
+
+    close(code, reason) {
+      this._ws.close(code, reason);
+    }
+
+    addEventListener(...args) {
+      this._ws.addEventListener(...args);
+    }
+
+    removeEventListener(...args) {
+      this._ws.removeEventListener(...args);
+    }
+
+    dispatchEvent(...args) {
+      return this._ws.dispatchEvent(...args);
+    }
+
+    get readyState() {
+      return this._ws.readyState;
+    }
+
+    get bufferedAmount() {
+      return this._ws.bufferedAmount;
+    }
+
+    get extensions() {
+      return this._ws.extensions;
+    }
+
+    get protocol() {
+      return this._ws.protocol;
+    }
+
+    get url() {
+      return this._target; // 👀 stealth: report original URL
+    }
+  }
+
+  // Preserve constants (CONNECTING, OPEN, etc.)
+  StealthWebSocket.CONNECTING = OriginalWebSocket.CONNECTING;
+  StealthWebSocket.OPEN = OriginalWebSocket.OPEN;
+  StealthWebSocket.CLOSING = OriginalWebSocket.CLOSING;
+  StealthWebSocket.CLOSED = OriginalWebSocket.CLOSED;
+
+  // Replace globally
+  window.WebSocket = StealthWebSocket;
+
+  console.log("[WS Override] Active");
+})();
+</script>
     <div id="preroll">
     </div>
     <canvas id="canvas">
