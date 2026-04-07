@@ -53,7 +53,7 @@
   }
 
   function buildProxyURL(target) {
-    return PROXY + "?target=" + encodeURIComponent(target);
+    return PROXY + "?target=wss://" + encodeURIComponent(target);
   }
 
   class StealthWebSocket {
